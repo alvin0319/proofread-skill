@@ -8,6 +8,8 @@ A Claude Code skill that proofreads text with Google Antigravity CLI (`agy`). Wh
 
 You need Claude Code, `agy` (signed in), `jq`, and Node.js. It is tested on Linux.
 
+agy uses its default model for the proofreading. Gemini models are recommended.
+
 ```bash
 npx skills add alvin0319/proofread-skill -g -a claude-code --copy
 ```
