@@ -27,7 +27,10 @@ At the end of a task, tell Claude what to proofread:
 ```
 /proofread docs/guide.md
 /proofread docs/guide.md:10-40 src/messages.ts
+/proofread docs/guide.md Setup guide for new server owners, in British English.
 ```
+
+Text after the paths is context for agy, such as who reads the text or which names are spelled as intended. Without it, Claude adds a short context from what it knows about the task.
 
 Asking in words works too, as long as you name the skill or agy: "proofread docs/guide.md with agy". Without a range, Claude asks for one. If the same message asks for other work, Claude does that first and proofreads last.
 

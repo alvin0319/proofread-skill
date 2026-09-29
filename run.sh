@@ -28,6 +28,9 @@ build_message() {
     cat -- "$file"
     printf '\n</instructions>\n'
   done
+  if [ -n "$context" ]; then
+    printf '\n<context>\n%s\n</context>\n' "$context"
+  fi
   printf '\n<scope>\n%s</scope>\n' "$scope"
   for path in "${paths[@]}"; do
     printf '\n=== FILE: %s\n' "$path"
@@ -36,16 +39,19 @@ build_message() {
 }
 
 usage() {
-  echo "usage: run.sh [--timeout <duration>] <path>[:<ranges>] ..." >&2
+  echo "usage: run.sh [--timeout <duration>] [--context <text>] <path>[:<ranges>] ..." >&2
   exit 2
 }
 
 timeout=9m
-if [ "${1:-}" = --timeout ]; then
-  [ $# -ge 2 ] || usage
-  timeout=$2
-  shift 2
-fi
+context=
+while [ $# -gt 0 ]; do
+  case $1 in
+    --timeout) [ $# -ge 2 ] || usage; timeout=$2; shift 2 ;;
+    --context) [ $# -ge 2 ] || usage; context=$2; shift 2 ;;
+    *) break ;;
+  esac
+done
 [ $# -gt 0 ] || usage
 
 paths=()
@@ -85,7 +91,7 @@ if [ "$(sha256sum -- "${paths[@]}")" != "$before" ]; then
   exit 1
 fi
 
-tools=$(jq -r 'select(.event == "step_update") | .step_update.tool_name // empty' <<<"$events" | sort -u | paste -sd ' ')
+tools=$(jq -r 'select(.event == "step_update") | .step_update.tool_name // empty | select(. != "finish")' <<<"$events" | sort -u | paste -sd ' ')
 [ -z "$tools" ] || echo "run.sh: agy used tools: $tools" >&2
 
 result=$(jq -c 'select(.event == "result") | .result' <<<"$events")

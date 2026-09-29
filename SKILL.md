@@ -1,7 +1,7 @@
 ---
 name: proofread
 description: Proofreads the text in a range the user specifies (files, directories, or line ranges) with Google Antigravity CLI (agy), as the last step of a task. agy only proposes changes; Claude applies the fixes with Edit and reports optional findings for the user to decide on. In code, only the text inside string literals changes. Use only when the user explicitly asks for it (/proofread, this skill by name, or proofreading with agy). Do not use it on your own initiative or for a general spelling request that does not ask for it. Run it after all other requested work is finished.
-argument-hint: "<path[:lines]> ..."
+argument-hint: "<path[:lines]> ... [context]"
 ---
 
 # Proofread with agy
@@ -20,14 +20,17 @@ Proofreading is the last step. Finish everything else in the user's request firs
 
 - Proofread exactly the range the user gave: files, directories, or line ranges such as `docs/guide.md:10-40`. Expand directories to the text files inside them, leaving out binary, lock, and generated files.
 - If the user gave no range, ask for one. Do not pick a range yourself.
+- Words in the request that describe the text instead of naming a path, such as its purpose, its readers, or names that are spelled as intended, are context for agy.
 
 ## 2. Run agy
 
 ```bash
-bash "${CLAUDE_SKILL_DIR}/run.sh" docs/guide.md:10-40 src/messages.ts
+bash "${CLAUDE_SKILL_DIR}/run.sh" --context "Setup guide for new server owners. NetherNet is a product name." docs/guide.md:10-40 src/messages.ts
 ```
 
 A bare path covers the whole file, and `path:12-30,41` covers only those lines.
+
+`--context <text>` before the paths is optional background for agy. Pass the user's context as they wrote it. If they gave none, write one or two sentences of facts you know from the task: what the text is for, who reads it, and names or terms the task introduced. State facts only, never what agy should flag or skip, because agy is there to give a second opinion. If you know nothing beyond the files, leave `--context` out.
 
 `--timeout <duration>` before the paths is optional and sets agy's time limit as a Go duration such as `90s` or `15m`. The default is `9m`; use a longer one for a large range. A foreground Bash call cannot wait more than 10 minutes, so give it a 600000 ms timeout, and use `run_in_background` when the limit is over `9m`.
 
@@ -74,4 +77,4 @@ Below the table, list each skipped suggestion with why it was skipped.
 | Location | Current | Possible change | Reason |
 | --- | --- | --- | --- |
 
-Keep each reason to a few words, and quote only the changed part of a long line. If a section is empty, say so in one line. End with the instruction files agy received.
+Keep each reason to a few words, and quote only the changed part of a long line. If a section is empty, say so in one line. End with the instruction files agy received and the context you sent, if any.
